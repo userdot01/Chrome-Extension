@@ -186,25 +186,3 @@ assembly needs a human to load it once.
 | Client-side resource use | 20% | 1.2 MB model, 50–90 ms inference, ~12 MB install, no GPU required |
 | End-to-end latency | 15% | Side panel reports per-step DOM-read and server round-trip time live |
 
-## Known limitations
-
-- **Face detection is decoupled from the reasoning loop.** It drives the
-  on-screen blur only; its boxes never enter the payload. Since no image data is
-  ever transmitted, it isn't what keeps faces off the network — not sending
-  images is. It demonstrates local CV capability and guards against
-  shoulder-surfing.
-- **Redaction is rule-based, not ML-based.** It catches structured PII
-  exhaustively, but not free-form sensitive text with no pattern — a name or a
-  diagnosis in a sentence. An NER model is the natural next step.
-- **`host_permissions` is `<all_urls>`.** Not by choice:
-  `chrome.tabs.captureVisibleTab` requires literally `<all_urls>` or
-  `activeTab`, and `activeTab` proved unreliable across a long-lived side panel
-  session. A production build should revisit this.
-- **The 10.5 MB WASM binary is the ONNX *runtime*, not the model.** The model is
-  1.2 MB. Shrinking it needs a custom operator-trimmed ORT build.
-- **WASM, single-threaded** — `numThreads = 1` avoids the cross-origin isolation
-  headers `SharedArrayBuffer` requires. WebGPU is available in ORT and unused.
-- **A submit click can silently no-op** if the page's own HTML validation
-  rejects it; `el.click()` doesn't throw. `content_script.js` checks
-  `form.checkValidity()` afterward and surfaces a warning rather than a
-  misleading "ok".
